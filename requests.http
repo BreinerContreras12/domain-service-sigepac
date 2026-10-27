@@ -1,0 +1,76 @@
+### Cliente HTTP de IntelliJ / VS Code (extensión REST Client).
+### 1) Inicie sesión en AuthCore con un usuario ADMIN y pegue el token aquí. NO escriba credenciales en este archivo.
+@token = PEGUE_AQUI_EL_JWT_DE_AUTHCORE
+@base = http://localhost:8082
+
+### HU-8 Crear negocio
+POST {{base}}/api/negocios
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "nombre": "Panadería El Trigal", "local": "L-101", "documentoPropietario": "1090123456",
+  "nombrePropietario": "Ana Pérez", "telefonoPropietario": "3001234567" }
+
+### HU-8 Consultar / editar
+GET {{base}}/api/negocios/1
+Authorization: Bearer {{token}}
+
+###
+PUT {{base}}/api/negocios/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "nombre": "Panadería El Trigal Express", "local": "L-101", "documentoPropietario": "1090123456",
+  "nombrePropietario": "Ana Pérez", "telefonoPropietario": "3001234567" }
+
+### HU-8 Dar de baja (409 si debe dinero)
+DELETE {{base}}/api/negocios/1
+Authorization: Bearer {{token}}
+
+### HU-9 Registrar deudas (concepto: ADMINISTRACION o ALQUILER)
+POST {{base}}/api/negocios/1/deudas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "concepto": "ADMINISTRACION", "anio": 2026, "mes": 9, "valor": 100000 }
+
+###
+POST {{base}}/api/negocios/1/deudas
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "concepto": "ADMINISTRACION", "anio": 2026, "mes": 10, "valor": 100000 }
+
+### HU-9 Corregir el valor de una deuda
+PUT {{base}}/api/deudas/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "valor": 120000 }
+
+### HU-10 Registrar pago (se aplica primero a la deuda más antigua)
+POST {{base}}/api/negocios/1/pagos
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "fecha": "2026-10-20", "monto": 130000 }
+
+### HU-10 Estado de cuenta
+GET {{base}}/api/negocios/1/estado-cuenta
+Authorization: Bearer {{token}}
+
+### HU-10 Anular un pago
+POST {{base}}/api/pagos/1/anulacion
+Authorization: Bearer {{token}}
+
+### HU-11 Listado paginado
+GET {{base}}/api/negocios?pagina=0&tamano=20
+Authorization: Bearer {{token}}
+
+### HU-12 Búsqueda: por nombre, local, documento y/o saldo
+GET {{base}}/api/negocios?nombre=trigal&conSaldo=true
+Authorization: Bearer {{token}}
+
+###
+GET {{base}}/api/negocios?local=L-101&documento=1090123456&incluirInactivos=true
+Authorization: Bearer {{token}}
