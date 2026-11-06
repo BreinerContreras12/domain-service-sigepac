@@ -10,8 +10,13 @@ import com.sigepac.administracion.domain.vo.CodigoLocal;
 import com.sigepac.administracion.testsupport.Datos;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.annotation.Transactional;
 
 /** Toda implementación del puerto (memoria, JPA…) debe pasar estas mismas pruebas. */
+// Las pruebas se heredan desde otro paquete: Spring no veía el @Transactional de @DataJpaTest y los datos
+// quedaban guardados entre pruebas (local 'L-1' repetido). Aquí cada prueba vuelve a revertirse al terminar.
+// En las versiones en memoria esta anotación no hace nada.
+@Transactional
 public abstract class NegocioRepositoryContractTest {
 
     protected abstract NegocioRepositoryPort repo();
