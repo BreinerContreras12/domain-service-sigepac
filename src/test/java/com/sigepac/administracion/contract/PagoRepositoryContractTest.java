@@ -10,7 +10,12 @@ import com.sigepac.administracion.domain.vo.Dinero;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.annotation.Transactional;
 
+// Las pruebas se heredan desde otro paquete: Spring no veía el @Transactional de @DataJpaTest y los datos
+// quedaban guardados entre pruebas (local 'L-1' repetido). Aquí cada prueba vuelve a revertirse al terminar.
+// En las versiones en memoria esta anotación no hace nada.
+@Transactional
 public abstract class PagoRepositoryContractTest {
 
     private static final LocalDate HOY = LocalDate.of(2026, 10, 20);
