@@ -14,7 +14,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -62,10 +62,19 @@ public class RestExceptionHandler {
         return responder(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
     }
 
-    @ExceptionHandler({OptimisticLockingFailureException.class, DataIntegrityViolationException.class})
+    /**
+     * Dos operaciones tocaron los mismos datos a la vez (p. ej. dos pagos sobre la misma deuda).
+     * ConcurrencyFailureException cubre el bloqueo optimista (@Version) y también los bloqueos/deadlocks
+     * que puede lanzar la base de datos; antes estos últimos terminaban en un 500.
+     * A la administradora se le dice que NO se guardó nada y qué hacer; el detalle técnico queda en el log.
+     */
+    @ExceptionHandler({ConcurrencyFailureException.class, DataIntegrityViolationException.class})
     ResponseEntity<ErrorResponse> concurrencia(Exception e) {
-        LOG.warn("Conflicto de concurrencia: {}", e.toString());
-        return responder(HttpStatus.CONFLICT, "Otra operación modificó los mismos datos al mismo tiempo; intente de nuevo");
+        LOG.warn("Conflicto de concurrencia (operación rechazada, sin cambios guardados): {}", e.toString());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(409, "Conflict",
+                "Otra operación modificó estos datos al mismo tiempo (por ejemplo, otro pago al mismo negocio)",
+                List.of("No se guardó ningún cambio de esta operación",
+                        "Consulte el estado de cuenta actualizado y, si aún corresponde, vuelva a intentarlo")));
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,

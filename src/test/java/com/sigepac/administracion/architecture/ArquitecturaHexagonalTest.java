@@ -36,7 +36,9 @@ class ArquitecturaHexagonalTest {
 
     @ArchTest
     static final ArchRule los_puertos_de_salida_son_interfaces =
-            classes().that().resideInAPackage("..application.port.out..").should().beInterfaces();
+            classes().that().resideInAPackage("..application.port.out..")
+                    .and().haveSimpleNameEndingWith("Port")   // FiltroNegocio es un criterio (record), no un puerto
+                    .should().beInterfaces();
 
     @ArchTest
     static final ArchRule los_controladores_no_conocen_la_persistencia =
