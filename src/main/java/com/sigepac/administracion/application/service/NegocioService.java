@@ -8,6 +8,8 @@ import com.sigepac.administracion.application.port.in.command.EditarNegocioComma
 import com.sigepac.administracion.application.port.in.command.RegistrarNegocioCommand;
 import com.sigepac.administracion.application.port.out.DeudaRepositoryPort;
 import com.sigepac.administracion.application.port.out.NegocioRepositoryPort;
+import com.sigepac.administracion.application.port.out.TransaccionPort;
+import com.sigepac.administracion.domain.model.AccionAuditada;
 import com.sigepac.administracion.domain.exception.LocalOcupadoException;
 import com.sigepac.administracion.domain.exception.NegocioNoEncontradoException;
 import com.sigepac.administracion.domain.exception.ValorInvalidoException;
@@ -25,11 +27,16 @@ public class NegocioService implements RegistrarNegocioUseCase, EditarNegocioUse
     private final NegocioRepositoryPort negocios;
     private final DeudaRepositoryPort deudas;
     private final EstadoCuentaService estadoCuenta;
+    private final TransaccionPort transaccion;
+    private final Auditor auditor;
 
-    public NegocioService(NegocioRepositoryPort negocios, DeudaRepositoryPort deudas, EstadoCuentaService estadoCuenta) {
+    public NegocioService(NegocioRepositoryPort negocios, DeudaRepositoryPort deudas, EstadoCuentaService estadoCuenta,
+                          TransaccionPort transaccion, Auditor auditor) {
         this.negocios = negocios;
         this.deudas = deudas;
         this.estadoCuenta = estadoCuenta;
+        this.transaccion = transaccion;
+        this.auditor = auditor;
     }
 
     @Override
@@ -38,27 +45,41 @@ public class NegocioService implements RegistrarNegocioUseCase, EditarNegocioUse
         CodigoLocal local = CodigoLocal.de(c.local());
         Propietario propietario = Propietario.de(c.documentoPropietario(), c.nombrePropietario(), c.telefonoPropietario());
         Negocio nuevo = Negocio.registrar(c.nombre(), local, propietario);
-        verificarLocalLibre(local, null);
-        return negocios.guardar(nuevo);
+        return transaccion.ejecutar(() -> {
+            verificarLocalLibre(local, null);
+            Negocio guardado = negocios.guardar(nuevo);
+            auditor.registrar(AccionAuditada.NEGOCIO_REGISTRADO, guardado.getId(), guardado.getId(),
+                    "Local " + local.valor());
+            return guardado;
+        });
     }
 
     @Override
     public Negocio editar(EditarNegocioCommand c) {
         exigirCampos(c.nombre(), c.local(), c.documentoPropietario(), c.nombrePropietario());
-        Negocio negocio = cargar(c.id());
-        negocio.asegurarActivo();
-        CodigoLocal local = CodigoLocal.de(c.local());
-        Propietario propietario = Propietario.de(c.documentoPropietario(), c.nombrePropietario(), c.telefonoPropietario());
-        verificarLocalLibre(local, negocio.getId());
-        negocio.editar(c.nombre(), local, propietario);
-        return negocios.guardar(negocio);
+        return transaccion.ejecutar(() -> {
+            Negocio negocio = cargar(c.id());
+            negocio.asegurarActivo();
+            CodigoLocal local = CodigoLocal.de(c.local());
+            Propietario propietario = Propietario.de(c.documentoPropietario(), c.nombrePropietario(), c.telefonoPropietario());
+            verificarLocalLibre(local, negocio.getId());
+            negocio.editar(c.nombre(), local, propietario);
+            Negocio guardado = negocios.guardar(negocio);
+            auditor.registrar(AccionAuditada.NEGOCIO_EDITADO, guardado.getId(), guardado.getId(),
+                    "Local " + local.valor());
+            return guardado;
+        });
     }
 
     @Override
     public Negocio darDeBaja(long negocioId) {
-        Negocio negocio = cargar(negocioId);
-        negocio.darDeBaja(estadoCuenta.saldoDe(deudas.buscarPorNegocio(negocioId)));
-        return negocios.guardar(negocio);
+        return transaccion.ejecutar(() -> {
+            Negocio negocio = cargar(negocioId);
+            negocio.darDeBaja(estadoCuenta.saldoDe(deudas.buscarPorNegocio(negocioId)));
+            Negocio guardado = negocios.guardar(negocio);
+            auditor.registrar(AccionAuditada.NEGOCIO_DADO_DE_BAJA, guardado.getId(), guardado.getId(), "Baja lógica");
+            return guardado;
+        });
     }
 
     @Override

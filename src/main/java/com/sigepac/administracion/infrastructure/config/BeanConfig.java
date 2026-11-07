@@ -1,9 +1,13 @@
 package com.sigepac.administracion.infrastructure.config;
 
+import com.sigepac.administracion.application.port.out.AuditoriaRepositoryPort;
 import com.sigepac.administracion.application.port.out.DeudaRepositoryPort;
 import com.sigepac.administracion.application.port.out.NegocioRepositoryPort;
 import com.sigepac.administracion.application.port.out.PagoRepositoryPort;
 import com.sigepac.administracion.application.port.out.TransaccionPort;
+import com.sigepac.administracion.application.port.out.UsuarioActualPort;
+import com.sigepac.administracion.application.service.Auditor;
+import com.sigepac.administracion.application.service.ConsultarAuditoriaService;
 import com.sigepac.administracion.application.service.BuscarNegociosService;
 import com.sigepac.administracion.application.service.ConsultarEstadoCuentaService;
 import com.sigepac.administracion.application.service.DeudaService;
@@ -40,20 +44,32 @@ public class BeanConfig {
     }
 
     @Bean
-    NegocioService negocioService(NegocioRepositoryPort negocios, DeudaRepositoryPort deudas, EstadoCuentaService estado) {
-        return new NegocioService(negocios, deudas, estado);
+    Auditor auditor(AuditoriaRepositoryPort auditoria, UsuarioActualPort usuarioActual, Clock reloj) {
+        return new Auditor(auditoria, usuarioActual, reloj);
     }
 
     @Bean
-    DeudaService deudaService(NegocioRepositoryPort negocios, DeudaRepositoryPort deudas) {
-        return new DeudaService(negocios, deudas);
+    NegocioService negocioService(NegocioRepositoryPort negocios, DeudaRepositoryPort deudas, EstadoCuentaService estado,
+                                  TransaccionPort transaccion, Auditor auditor) {
+        return new NegocioService(negocios, deudas, estado, transaccion, auditor);
+    }
+
+    @Bean
+    DeudaService deudaService(NegocioRepositoryPort negocios, DeudaRepositoryPort deudas, TransaccionPort transaccion,
+                              Auditor auditor) {
+        return new DeudaService(negocios, deudas, transaccion, auditor);
     }
 
     @Bean
     PagoService pagoService(NegocioRepositoryPort negocios, DeudaRepositoryPort deudas, PagoRepositoryPort pagos,
                             TransaccionPort transaccion, Clock reloj, AplicacionPagoService aplicacion,
-                            EstadoCuentaService estado) {
-        return new PagoService(negocios, deudas, pagos, transaccion, reloj, aplicacion, estado);
+                            EstadoCuentaService estado, Auditor auditor) {
+        return new PagoService(negocios, deudas, pagos, transaccion, reloj, aplicacion, estado, auditor);
+    }
+
+    @Bean
+    ConsultarAuditoriaService consultarAuditoriaService(NegocioRepositoryPort negocios, AuditoriaRepositoryPort auditoria) {
+        return new ConsultarAuditoriaService(negocios, auditoria);
     }
 
     @Bean

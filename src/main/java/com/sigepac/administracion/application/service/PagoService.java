@@ -11,6 +11,7 @@ import com.sigepac.administracion.application.port.out.TransaccionPort;
 import com.sigepac.administracion.domain.exception.DeudaNoEncontradaException;
 import com.sigepac.administracion.domain.exception.NegocioNoEncontradoException;
 import com.sigepac.administracion.domain.exception.PagoNoEncontradoException;
+import com.sigepac.administracion.domain.model.AccionAuditada;
 import com.sigepac.administracion.domain.model.AplicacionPago;
 import com.sigepac.administracion.domain.model.Deuda;
 import com.sigepac.administracion.domain.model.Negocio;
@@ -36,10 +37,11 @@ public class PagoService implements RegistrarPagoUseCase, AnularPagoUseCase {
     private final Clock reloj;
     private final AplicacionPagoService aplicacion;
     private final EstadoCuentaService estadoCuenta;
+    private final Auditor auditor;
 
     public PagoService(NegocioRepositoryPort negocios, DeudaRepositoryPort deudas, PagoRepositoryPort pagos,
                        TransaccionPort transaccion, Clock reloj, AplicacionPagoService aplicacion,
-                       EstadoCuentaService estadoCuenta) {
+                       EstadoCuentaService estadoCuenta, Auditor auditor) {
         this.negocios = negocios;
         this.deudas = deudas;
         this.pagos = pagos;
@@ -47,6 +49,7 @@ public class PagoService implements RegistrarPagoUseCase, AnularPagoUseCase {
         this.reloj = reloj;
         this.aplicacion = aplicacion;
         this.estadoCuenta = estadoCuenta;
+        this.auditor = auditor;
     }
 
     @Override
@@ -69,6 +72,8 @@ public class PagoService implements RegistrarPagoUseCase, AnularPagoUseCase {
                     .findFirst()
                     .ifPresent(deudas::guardar));
             Pago guardado = pagos.guardar(pago);
+            auditor.registrar(AccionAuditada.PAGO_REGISTRADO, guardado.getId(), guardado.getNegocioId(),
+                    "Pago por " + guardado.getMonto().valor().toPlainString());
             return new ComprobantePago(guardado, saldoAnterior, estadoCuenta.saldoDe(deudasNegocio));
         });
     }
@@ -88,7 +93,10 @@ public class PagoService implements RegistrarPagoUseCase, AnularPagoUseCase {
                 afectadas.get(i).revertirPago(pago.getAplicaciones().get(i).monto());
             }
             afectadas.forEach(deudas::guardar);
-            return pagos.guardar(pago);
+            Pago anulado = pagos.guardar(pago);
+            auditor.registrar(AccionAuditada.PAGO_ANULADO, anulado.getId(), anulado.getNegocioId(),
+                    "Pago por " + anulado.getMonto().valor().toPlainString() + " anulado");
+            return anulado;
         });
     }
 }
