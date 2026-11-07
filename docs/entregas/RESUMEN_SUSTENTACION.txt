@@ -1,0 +1,197 @@
+================================================================================
+GUÍA COMPLETA DE SUSTENTACIÓN Y CONTEXTO · SEMANAS 9 Y 10 (ISIII)
+Proyecto: SIGEPAC · Domain Service (Grupo 4)
+================================================================================
+
+================================================================================
+PARTE 1: LO QUE TIENES QUE SUSTENTARLE AL PROFESOR
+(Resumen coherente, no técnico y con los resultados de cada guía)
+================================================================================
+
+--------------------------------------------------------------------------------
+📌 ENTREGA SEMANA 9: Taller 9 y Comparativo
+--------------------------------------------------------------------------------
+
+¿DE QUÉ SE TRATABA?
+Demostrar con el código real de nuestro proyecto qué le pasa al sistema cuando 
+el cliente pide cambios, y cómo cambia el costo si trabajamos en Cascada, en RUP 
+o con nuestra Arquitectura Hexagonal.
+
+¿QUÉ HICIMOS?
+Simulamos 3 cambios reales sobre nuestro servicio de la plaza cívica 
+(domain-service-sigepac):
+1. Cambio 1 (Regla de negocio): Dar un 10% de descuento si el inquilino paga 
+   temprano (pronto pago).
+2. Cambio 2 (Infraestructura): Cambiar la base de datos de pruebas (H2) a una 
+   base de datos real (PostgreSQL/MySQL).
+3. Cambio 3 (Alcance): Clasificar los locales por categoría (comida, artesanías, 
+   etc.) y registrar qué administrador hizo el trámite.
+
+¿CUÁLES FUERON LOS RESULTADOS QUE OBTUVIMOS? (Esto es lo que le muestras al profesor):
+• En el Cambio 1 (El descuento): Se modificaron 9 archivos, pero todos quedaron 
+  encerrados en el dominio y la aplicación. La base de datos y la web no se 
+  enteraron del cambio. Nos dolió un poco en las pruebas unitarias porque tocó 
+  recalcular valores a mano.
+• En el Cambio 2 (Cambiar de base de datos): CERO archivos de código Java cambiaron. 
+  Solo tocamos 2 archivos de configuración (pom.xml y application-prod.yml). Aquí 
+  demostramos que la Arquitectura Hexagonal funcionó perfecto: a las reglas del 
+  negocio no les importa qué base de datos hay detrás.
+• En el Cambio 3 (Categorías de locales): Se tocaron 10 archivos de arriba a abajo, 
+  pero de forma ordenada gracias a que cada caso de uso está separado.
+
+💡 LA CONCLUSIÓN QUE LE DICES AL PROFESOR EN SEMANA 9:
+"Profesor, la conclusión del taller es que la metodología decide cuándo nos 
+enteramos del cambio y cuánto papeleo cuesta (en Cascada toca rehacer documentos 
+y repetir pruebas completas; en RUP se mete en la siguiente iteración). Pero la 
+arquitectura es la que decide cuántos archivos tocamos realmente en el código".
+
+
+--------------------------------------------------------------------------------
+📌 ENTREGA SEMANA 10: Deuda Técnica, Spikes y Sprints
+--------------------------------------------------------------------------------
+
+¿DE QUÉ SE TRATABA?
+Dejar de ver el proyecto como un código perfecto y ser autocríticos: identificar 
+qué cosas dejamos pendientes o hechas "de afán" para poder entregar (deuda técnica), 
+investigar dudas antes de programar (spikes) y organizar la solución en 2 
+iteraciones en Trello.
+
+¿CUÁLES FUERON LOS RESULTADOS QUE OBTUVIMOS?:
+1. Encontramos 6 Deudas Técnicas reales en nuestro código:
+   • La principal: la base de datos se crea sola con Hibernate (ddl-auto: update), 
+     lo que en un ambiente real puede borrar datos o alterar tablas sin control.
+   • Otras deudas: falta paginación si un local tiene cientos de pagos, y falta 
+     Swagger para que el equipo de frontend pruebe los endpoints fácilmente.
+2. Planteamos 2 Spikes (investigaciones cortas con límite de tiempo):
+   • Spike 1 (2 horas): Averiguar si nos sirve más Flyway o Liquibase para 
+     controlar las versiones de la base de datos.
+   • Spike 2 (3 horas): Investigar cómo bloquear registros para evitar que dos 
+     cajeros cobren la misma deuda al mismo tiempo y descuadren la plata.
+3. Organizamos el trabajo en 2 Sprints en el Trello (SIGEPAC · XP):
+   • Sprint 1 (Arreglar la base del sistema): Es lo más urgente (tarjetas A-01 
+     a A-03), que es poner a correr todas las pruebas y meter Flyway. Por eso 
+     estas tarjetas están en la columna "Iteración actual".
+   • Sprint 2 (Calidad y presentación): Dejamos para después la paginación, 
+     Swagger y la seguridad avanzada (A-04 a A-06). Por eso están en la columna 
+     "Backlog".
+4. Definición de Hecho (DoD): Acordamos 6 reglas básicas que debe cumplir 
+   cualquier tarea antes de considerarla terminada (pruebas pasando, revisada por 
+   otro compañero y documentada en el README).
+
+🎯 RESUMEN EN UNA SOLA FRASE POR SI TE PREGUNTA RÁPIDO:
+• Semana 9: Demostramos que la arquitectura hexagonal aisló el negocio de la base 
+  de datos (0 clases Java modificadas al migrar de motor).
+• Semana 10: Identificamos 6 deudas reales de nuestro código, formulamos 2 
+  investigaciones técnicas y organizamos el trabajo en 2 sprints en el tablero de 
+  Trello.
+
+
+================================================================================
+PARTE 2: QUÉ HICIMOS CON LAS GUÍAS, QUÉ SE ALTERÓ Y CONTEXTO GENERAL
+================================================================================
+
+--------------------------------------------------------------------------------
+1. LAS GUÍAS Y MATERIALES QUE SE USARON
+--------------------------------------------------------------------------------
+Trabajamos con 3 insumos de la materia Ingeniería del Software III (Prof. Carlos 
+Arturo Barrientos):
+1. Guía de estudio oficial (Semanas 9 y 10): Documento con la teoría de Cascada 
+   (Royce), RUP (Kruchten), Scrum, el Cuadrante de Deuda Técnica de Fowler, 
+   definición de Spikes y las rúbricas de evaluación.
+2. Plantilla del Taller 9 ("El cambio de alcance"): La hoja de trabajo oficial 
+   donde se analizan 3 cambios sobre el proyecto (Regla de negocio, Infraestructura 
+   y Alcance).
+3. Ejemplo resuelto de la Ferretería: La matriz modelo que mostró el profesor en 
+   clase para comparar Arquitectura Hexagonal vs. Capas clásicas y Cascada vs. RUP.
+
+--------------------------------------------------------------------------------
+2. ¿QUÉ FUE LO QUE SE HIZO EXACTAMENTE?
+--------------------------------------------------------------------------------
+Se analizó el código real del backend (domain-service-sigepac) y se generaron los 
+entregables oficiales en docs/entregas/, además de sincronizar Trello:
+
+1. Hoja de Trabajo del Taller 9 (Taller_9_Ficha_Cambio_Alcance.docx):
+   Diligenciada con las clases reales de tu proyecto para 3 cambios concretos:
+   • Cambio 1 (Regla de negocio): Descuento del 10% por pronto pago en deudas de 
+     administración (toca AplicacionPagoService, Dinero, Deuda).
+   • Cambio 2 (Infraestructura): Pasar de H2 en memoria a PostgreSQL/MySQL 
+     productivo (0 archivos de código Java tocados; solo pom.xml y application-prod.yml).
+   • Cambio 3 (Alcance): Categorización de locales (GASTRONOMIA, ARTESANIAS, etc.) 
+     y auditoría de creación.
+2. Informe Comparativo Semana 9 (Semana_9_Comparativo_Clasico_Actual.docx):
+   Informe formal de 4 páginas con:
+   • Mapeo del semestre a las 4 fases de RUP (Inicio, Elaboración, Construcción, 
+     Transición) con evidencias de SIGEPAC (anteproyecto, Vistas 4+1, AuthCore, 
+     70 pruebas unitarias en verde).
+   • Matriz comparativa de los 3 cambios en Cascada vs. RUP vs. Hexagonal.
+   • Análisis autocrítico de cómo trabajó realmente el Grupo 4 y conexión con 
+     principios SOLID.
+3. Informe Semana 10 (Semana_10_Backlog_Arquitectonico.docx):
+   • 6 deudas técnicas reales de SIGEPAC clasificadas en el Cuadrante de Fowler 
+     (D-01 a D-06).
+   • 2 Spikes de investigación acotados en tiempo (SP-01: Flyway vs. Liquibase 
+     por 2h; SP-02: Concurrencia en pagos por 3h).
+   • Backlog Arquitectónico Priorizado con la escala oficial de tu Excel 
+     (Prioridad 1-10 y Dimensión 10-100).
+   • Plan para 2 Sprints y la Definición de Terminado (DoD) del equipo.
+4. Sincronización en Trello (SIGEPAC · XP):
+   Se crearon las tarjetas con etiquetas de color:
+   • En "Iteración actual" (Sprint 1): Las deudas urgentes y los Spikes (A-01, 
+     SP-01, A-02, SP-02, A-03) con sus checklists de criterios de aceptación.
+   • En "Historias (backlog)" (Sprint 2): Las deudas de calidad futura (A-04 
+     paginación, A-05 Swagger, A-06 revocación de tokens JWT).
+
+--------------------------------------------------------------------------------
+3. ¿QUÉ SE ALTERÓ EN TU PROYECTO?
+--------------------------------------------------------------------------------
+• CERO CÓDIGO JAVA MODIFICADO: No se alteró ni una sola línea del backend (src/main/ 
+  ni src/test/). Las 70 pruebas unitarias siguen intactas y en verde.
+• CERO BASES DE DATOS TOCADAS: No se borró ni alteró ningún dato.
+• Lo único nuevo son archivos de documentación: Se crearon dentro de la carpeta 
+  aislada docs/entregas/ (los Word .docx, los borradores .md y el script export_to_docx.py).
+
+--------------------------------------------------------------------------------
+4. ¿QUÉ DEBES PRESENTARLE AL PROFESOR EXACTAMENTE?
+--------------------------------------------------------------------------------
+Son 2 entregables independientes:
+
+A. Para la Entrega de la Semana 9:
+• El archivo Word: Taller_9_Ficha_Cambio_Alcance.docx (las 3 fichas completas).
+• El informe formal: Semana_9_Comparativo_Clasico_Actual.docx (el documento de 
+  4 páginas con la teoría, el mapeo RUP y la autocrítica).
+
+B. Para la Entrega de la Semana 10:
+• El documento: Semana_10_Backlog_Arquitectonico.docx.
+• Evidencias de Trello: Abrir el tablero SIGEPAC · XP, tomar 2 capturas de 
+  pantalla y pegarlas al final del documento (en la sección 6):
+  1. Captura 1: Vista general de las columnas (Iteración actual mostrando las 
+     tarjetas moradas de Spike y naranjas de Deuda Técnica).
+  2. Captura 2: Abrir la tarjeta SP-01 o SP-02 para que el profesor vea la 
+     descripción con el Timebox (2h) y el checklist de criterios.
+
+--------------------------------------------------------------------------------
+5. "MACHETE" PARA NO SACAR MALA NOTA: LO QUE TE VA A PREGUNTAR EL PROFESOR
+--------------------------------------------------------------------------------
+1. "¿Por qué el cambio de base de datos (H2 a PostgreSQL) no costó nada en su código?"
+   -> Respuesta: "Porque gracias a la Arquitectura Hexagonal y al Principio de 
+      Inversión de Dependencias (DIP), el dominio no sabe qué base de datos 
+      existe. El cambio solo tocó 2 archivos de configuración (application-prod.yml 
+      y pom.xml); ninguna clase de negocio se modificó".
+
+2. "¿Qué es una tarjeta A-00 y una SP-00 en su Trello?"
+   -> Respuesta: "Las HU son historias funcionales para el usuario. Las A son 
+      Ítems del Backlog Arquitectónico (tareas técnicas como estabilizar pruebas 
+      o meter migraciones). Las SP son Spikes, tareas de investigación acotadas 
+      en tiempo (Timebox) para resolver una duda técnica antes de programar".
+
+3. "¿Qué es el Cuadrante de Fowler y denme un ejemplo de su proyecto?"
+   -> Respuesta: "Clasifica la deuda técnica en Deliberada/Inadvertida y 
+      Prudente/Imprudente. Por ejemplo, en nuestro proyecto dejar 
+      hibernate.ddl-auto: update en vez de usar scripts Flyway fue una deuda 
+      Deliberada-Prudente: sabíamos que no era lo ideal para producción, pero nos 
+      permitió modelar rápido el núcleo en la fase inicial; ahora en el Sprint 1 
+      la pagamos con la tarea A-02".
+
+4. "¿Cuál es la conclusión central entre Metodología y Arquitectura?"
+   -> Respuesta: "La arquitectura decide cuántos archivos tocamos; la metodología 
+      decide cuándo descubrimos el cambio y cuánto retrabajo burocrático cuesta".
