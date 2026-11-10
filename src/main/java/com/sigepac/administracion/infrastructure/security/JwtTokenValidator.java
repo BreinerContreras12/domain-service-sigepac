@@ -5,6 +5,7 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.Date;
 import java.util.List;
@@ -13,20 +14,26 @@ import javax.crypto.SecretKey;
 
 /**
  * Valida LOCALMENTE los tokens de AuthCore con la clave compartida (no llama a AuthCore en cada petición).
- * Acepta HS256/HS384/HS512: el token del grupo viene firmado con HS384, y exige que la clave tenga la longitud
- * mínima del algoritmo. Un token sin firma ("alg":"none") o con otra clave se rechaza.
- * Responsabilidad única: validar y extraer datos. No toca Spring Security (eso es del filtro).
+ * Soporta tanto claves codificadas en Base64 como cadenas UTF-8 planas (mínimo 32 bytes para HMAC-SHA).
+ * Acepta tokens firmados con HS256, HS384 y HS512 (AuthCore genera HS512/HS384).
  */
 public class JwtTokenValidator {
 
     private final SecretKey clave;
     private final Clock reloj;
 
-    public JwtTokenValidator(String secretBase64, Clock reloj) {
-        if (secretBase64 == null || secretBase64.isBlank()) {
-            throw new IllegalStateException("Falta JWT_SECRET_BASE64: la clave compartida con AuthCore es obligatoria");
+    public JwtTokenValidator(String secret, Clock reloj) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("Falta la clave compartida con AuthCore (JWT_SECRET / JWT_SECRET_BASE64)");
         }
-        this.clave = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretBase64.trim()));
+        byte[] bytesClave;
+        try {
+            byte[] decodificado = Decoders.BASE64.decode(secret.trim());
+            bytesClave = decodificado.length >= 32 ? decodificado : secret.trim().getBytes(StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            bytesClave = secret.trim().getBytes(StandardCharsets.UTF_8);
+        }
+        this.clave = Keys.hmacShaKeyFor(bytesClave);
         this.reloj = reloj;
     }
 

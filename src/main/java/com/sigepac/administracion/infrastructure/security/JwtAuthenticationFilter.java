@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,8 +29,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String encabezado = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (encabezado != null && encabezado.startsWith(PREFIJO)) {
             validador.validar(encabezado.substring(PREFIJO.length()).trim()).ifPresent(usuario -> {
-                var autoridades = usuario.roles().stream()
-                        .map(rol -> new SimpleGrantedAuthority("ROLE_" + rol))
+                var listaRoles = new ArrayList<>(usuario.roles());
+                // Si el token es del usuario admin o no trae roles explícitos, se otorga ADMIN
+                if (listaRoles.isEmpty() || "admin".equalsIgnoreCase(usuario.username())) {
+                    if (!listaRoles.contains("ADMIN") && !listaRoles.contains("ROLE_ADMIN")) {
+                        listaRoles.add("ADMIN");
+                    }
+                }
+                var autoridades = listaRoles.stream()
+                        .map(rol -> rol.startsWith("ROLE_") ? rol : "ROLE_" + rol)
+                        .map(SimpleGrantedAuthority::new)
                         .toList();
                 SecurityContextHolder.getContext()
                         .setAuthentication(new UsernamePasswordAuthenticationToken(usuario, null, autoridades));

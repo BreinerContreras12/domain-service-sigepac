@@ -18,7 +18,7 @@ public class SecurityConfig {
 
     @Bean
     JwtTokenValidator jwtTokenValidator(JwtProperties propiedades, Clock reloj) {
-        return new JwtTokenValidator(propiedades.secretBase64(), reloj);
+        return new JwtTokenValidator(propiedades.claveEfectiva(), reloj);
     }
 
     @Bean
@@ -28,8 +28,7 @@ public class SecurityConfig {
             .cors(Customizer.withDefaults())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(a -> a
-                // Decisión del proyecto: SIGEPAC es una herramienta de la administración de la plaza;
-                // todas las operaciones son del rol ADMIN. Lo demás se niega por defecto.
+                .requestMatchers("/api/actuator/health", "/actuator/health", "/health").permitAll()
                 .requestMatchers("/api/**").hasRole("ADMIN")
                 .anyRequest().denyAll())
             .exceptionHandling(e -> e
